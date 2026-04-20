@@ -58,7 +58,7 @@ export default function Dashboard() {
     axios.get(`${API}/stats`).then(r => setStats(r.data)).catch(() => {})
   }, [])
 
-  const prenom = user?.email?.split('@')[0]?.split('.')[0] ?? ''
+  const prenom = user?.email?.split('@')[0] ?? ''
   const prenomFormate = prenom.charAt(0).toUpperCase() + prenom.slice(1)
 
   return (
