@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useAuth } from '../context/AuthContext'
 
 const API = import.meta.env.VITE_API_URL
 const ROLES = ['reader', 'admin']
@@ -15,10 +16,12 @@ function dateFr(iso) {
 }
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers]             = useState([])
   const [loading, setLoading]         = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting]       = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
   const [updatingRole, setUpdatingRole] = useState(null)
 
   const [form, setForm]         = useState({ email: '', full_name: '', role: 'reader' })
@@ -91,11 +94,19 @@ export default function AdminUsers() {
   }
 
   const handleDelete = async (userId) => {
+    if (userId === currentUser?.id) {
+      setDeleteError("Vous ne pouvez pas supprimer votre propre compte.")
+      setConfirmDelete(null)
+      return
+    }
     setDeleting(true)
+    setDeleteError(null)
     try {
       await axios.delete(`${API}/admin/users/${userId}`)
       setUsers(prev => prev.filter(u => u.id !== userId))
       setConfirmDelete(null)
+    } catch {
+      setDeleteError("Erreur lors de la suppression.")
     } finally {
       setDeleting(false)
     }
@@ -105,6 +116,7 @@ export default function AdminUsers() {
     <div style={s.page}>
       <h1 style={s.title}>Admin — Utilisateurs</h1>
       <p style={s.subtitle}>Gérez les accès à WikiDAC</p>
+      {deleteError && <p style={s.error}>{deleteError}</p>}
 
       {/* Inviter un utilisateur */}
       <div style={s.inviteCard}>
