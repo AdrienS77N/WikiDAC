@@ -307,7 +307,10 @@ def admin_get_users():
 @app.post("/admin/users/invite")
 def admin_invite_user(data: UserInvite):
     try:
-        res = supabase.auth.admin.invite_user_by_email(data.email)
+        res = supabase.auth.admin.invite_user_by_email(
+            data.email,
+            options={"redirect_to": "https://wikidac.vercel.app/login"}
+        )
         user_id = res.user.id
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -46,6 +46,7 @@ export default function App() {
 function LoginRedirect() {
   const { user, loading } = useAuth()
   if (loading) return null
-  if (user) return <Navigate to="/" replace />
+  const isInvite = window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')
+  if (user && !isInvite) return <Navigate to="/" replace />
   return <Login />
 }
