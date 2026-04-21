@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../supabaseClient'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -7,6 +8,19 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  const [isInvite, setIsInvite] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [newPassword2, setNewPassword2] = useState('')
+  const [settingPassword, setSettingPassword] = useState(false)
+  const [settingOk, setSettingOk] = useState(false)
+
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+      setIsInvite(true)
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -21,6 +35,28 @@ export default function Login() {
     }
   }
 
+  const handleSetPassword = async (e) => {
+    e.preventDefault()
+    if (newPassword !== newPassword2) {
+      setError('Les mots de passe ne correspondent pas.')
+      return
+    }
+    if (newPassword.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.')
+      return
+    }
+    setSettingPassword(true)
+    setError(null)
+    const { error: err } = await supabase.auth.updateUser({ password: newPassword })
+    if (err) {
+      setError("Erreur lors de la définition du mot de passe.")
+    } else {
+      setSettingOk(true)
+      setTimeout(() => { window.location.href = '/' }, 2000)
+    }
+    setSettingPassword(false)
+  }
+
   return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -28,37 +64,70 @@ export default function Login() {
           <img src="/logo.png" alt="DAC Santé 77 Nord" style={styles.logoImg} />
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              style={styles.input}
-              placeholder="prenom.nom@dac77nord.fr"
-            />
-          </div>
-
-          <div style={styles.field}>
-            <label style={styles.label}>Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              style={styles.input}
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && <p style={styles.error}>{error}</p>}
-
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Connexion...' : 'Se connecter'}
-          </button>
-        </form>
+        {isInvite ? (
+          settingOk ? (
+            <p style={styles.success}>Mot de passe enregistré ! Redirection...</p>
+          ) : (
+            <form onSubmit={handleSetPassword} style={styles.form}>
+              <p style={styles.hint}>Bienvenue ! Définissez votre mot de passe pour accéder à WikiDAC.</p>
+              <div style={styles.field}>
+                <label style={styles.label}>Nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  required
+                  style={styles.input}
+                  placeholder="8 caractères minimum"
+                />
+              </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Confirmer le mot de passe</label>
+                <input
+                  type="password"
+                  value={newPassword2}
+                  onChange={e => setNewPassword2(e.target.value)}
+                  required
+                  style={styles.input}
+                  placeholder="••••••••"
+                />
+              </div>
+              {error && <p style={styles.error}>{error}</p>}
+              <button type="submit" style={styles.button} disabled={settingPassword}>
+                {settingPassword ? 'Enregistrement...' : 'Définir mon mot de passe'}
+              </button>
+            </form>
+          )
+        ) : (
+          <form onSubmit={handleSubmit} style={styles.form}>
+            <div style={styles.field}>
+              <label style={styles.label}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                style={styles.input}
+                placeholder="prenom.nom@dac77nord.fr"
+              />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Mot de passe</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                style={styles.input}
+                placeholder="••••••••"
+              />
+            </div>
+            {error && <p style={styles.error}>{error}</p>}
+            <button type="submit" style={styles.button} disabled={loading}>
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
@@ -104,6 +173,11 @@ const styles = {
     fontWeight: '500',
     color: '#374151',
   },
+  hint: {
+    fontSize: '13px',
+    color: '#6b7280',
+    margin: 0,
+  },
   input: {
     padding: '10px 14px',
     borderRadius: '8px',
@@ -116,6 +190,11 @@ const styles = {
     color: '#dc2626',
     fontSize: '13px',
     margin: 0,
+  },
+  success: {
+    color: '#16a34a',
+    fontSize: '14px',
+    textAlign: 'center',
   },
   button: {
     padding: '11px',
