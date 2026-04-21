@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { initialHash } from './supabaseClient'
 import Login from './pages/Login'
 import Layout from './components/Layout'
 import Territorial from './pages/Territorial'
@@ -46,7 +47,7 @@ export default function App() {
 function LoginRedirect() {
   const { user, loading } = useAuth()
   if (loading) return null
-  const isInvite = window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')
+  const isInvite = initialHash.includes('type=invite') || initialHash.includes('type=recovery')
   if (user && !isInvite) return <Navigate to="/" replace />
   return <Login />
 }

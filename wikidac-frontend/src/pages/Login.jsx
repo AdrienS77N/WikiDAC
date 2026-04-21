@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../supabaseClient'
+import { supabase, initialHash } from '../supabaseClient'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -16,8 +16,7 @@ export default function Login() {
   const [settingOk, setSettingOk] = useState(false)
 
   useEffect(() => {
-    const hash = window.location.hash
-    if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+    if (initialHash.includes('type=invite') || initialHash.includes('type=recovery')) {
       setIsInvite(true)
     }
   }, [])
