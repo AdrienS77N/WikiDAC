@@ -328,7 +328,10 @@ def admin_update_role(user_id: str, data: UserRoleUpdate):
 
 @app.delete("/admin/users/{user_id}")
 def admin_delete_user(user_id: str):
-    supabase.auth.admin.delete_user(user_id)
+    try:
+        supabase.auth.admin.delete_user(user_id)
+    except Exception:
+        pass
     supabase.table("users").delete().eq("id", user_id).execute()
     return {"ok": True}
 
